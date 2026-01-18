@@ -1,40 +1,48 @@
 #include "cpu_memory.h"
 
-cpu_memory allocateMem()
+cpu_memory *allocateMem()
 {
     cpu_memory mainMemory;
-    mainMemory.memSize = 64 * 1024;
-    mainMemory.ptr = (uint32_t *)malloc(mainMemory.memSize);
+    cpu_memory *mainMemoryPointer;
+    mainMemoryPointer = &mainMemory;
 
-    if (mainMemory.memSize == 0)
+    int memSizeInput = 0;
+    printf("Please enter the size of main memory in kb, eg for 64kb enter 64 or 32kb enter 32: ");
+
+    scanf("%d", memSizeInput); 
+
+    mainMemoryPointer->memSize = memSizeInput * 1024;
+    mainMemoryPointer->ptr = (uint32_t *)malloc(mainMemoryPointer->memSize);
+
+    if (mainMemoryPointer->memSize == 0)
     {
         printf("Failed to set memory size");
     }
-    else if (mainMemory.ptr == NULL)
+    if (mainMemoryPointer->ptr == NULL)
     {
         printf("Failed to allocate memory");
     }
 
-    return mainMemory;
+    return mainMemoryPointer;
 }
 
-void deallocateMem(cpu_memory mainMemory)
+void deallocateMem(cpu_memory *mainMemory)
 {
-    free(mainMemory.ptr);
+    free(mainMemory->ptr);
 
-    if (mainMemory.ptr == NULL)
+    if (mainMemory->ptr == NULL)
     {
         printf("deallocated memory!");
     }
 }
 
-void mem_write(cpu_memory mainMemory, uint32_t address, uint32_t value)
+void mem_write(cpu_memory *mainMemory, uint32_t address, uint32_t value)
 {
-    mainMemory.ptr[address] = value;
+    mainMemory->ptr[address] = value;
 }
 
-uint32_t mem_read(uint32_t address, cpu_memory mainMemory)
+uint32_t mem_read(uint32_t address, cpu_memory *mainMemory)
 {
-    uint32_t result = *(mainMemory.ptr + address);
+    uint32_t result = *(mainMemory->ptr + address);
     return result;
 }

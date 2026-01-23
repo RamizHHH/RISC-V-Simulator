@@ -7,9 +7,9 @@ cpu_memory *allocateMem()
     mainMemoryPointer = &mainMemory;
 
     int memSizeInput = 0;
-    printf("Please enter the size of main memory in kb, eg for 64kb enter 64 or 32kb enter 32: ");
+    printf("Enter the size of main memory in kb, eg for 64kb enter 64 or 32kb enter 32: ");
 
-    scanf("%d", memSizeInput); 
+    scanf("%d", memSizeInput);
 
     mainMemoryPointer->memSize = memSizeInput * 1024;
     mainMemoryPointer->ptr = (uint32_t *)malloc(mainMemoryPointer->memSize);

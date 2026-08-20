@@ -6,6 +6,8 @@
 #ifndef WRITEBACK_H
 #define WRITEBACK_H
 
-void WriteBack(Instruction *instr, Execute_Register *reg, CPU *cpu, Memory_Register *memReg);
+void WriteBack(Pipeline_Reg *MEM_WB_Current, CPU *cpu);
+
+void FreeInstr(Instruction *instr);
 
 #endif

@@ -2,69 +2,68 @@
 
 void Pipeline(CPU *cpu, uint32_t *mem)
 {
-    Execute_Register *ExReg = malloc(sizeof(Execute_Register));
-    Memory_Register *memReg = malloc(sizeof(Memory_Register));
-    int cycle = 1;
+    Pipeline_Reg **PipelineRegisters = InitalizePipelineReg();
+
+    int cycle = 0;
 
     while (cpu->halted != 1)
     {
+        memset(PipelineRegisters[IF_ID_Next], 0, sizeof(Pipeline_Reg));
+        memset(PipelineRegisters[ID_EX_Next], 0, sizeof(Pipeline_Reg));
+        memset(PipelineRegisters[EX_MEM_Next], 0, sizeof(Pipeline_Reg));
+        memset(PipelineRegisters[MEM_WB_Next], 0, sizeof(Pipeline_Reg));
 
-        printf("%d\n", cpu->reg[25]);
+        PipelineRegisters[IF_ID_Next]->RawInstr = FetchInstruction(mem, cpu);
 
-        uint32_t intsr = FetchInstruction(mem, cpu);
+        if (PipelineRegisters[IF_ID_Current]->RawInstr != 0)
+        {
+            PipelineRegisters[ID_EX_Next]->instr = DecodeInstruction(PipelineRegisters[IF_ID_Current]->RawInstr, PipelineRegisters[ID_EX_Next]);
+        }
 
-        Instruction *decodedInstr = DecodeStage(intsr);
+        if (PipelineRegisters[ID_EX_Current]->instr != 0)
+        {
+            ExecuteInstr(cpu, PipelineRegisters[ID_EX_Current], PipelineRegisters[EX_MEM_Next]);
+        }
 
-        ExecuteStage(decodedInstr, cpu, ExReg);
+        if (PipelineRegisters[EX_MEM_Current]->instr != 0)
+        {
+            MemStage(PipelineRegisters[EX_MEM_Current], PipelineRegisters[MEM_WB_Next], mem, cpu);
+        }
 
-        MemStageExecute(decodedInstr, ExReg, mem, cpu, memReg);
+        if (PipelineRegisters[MEM_WB_Current]->instr != 0)
+        {
+            WriteBack(PipelineRegisters[MEM_WB_Current], cpu);
+        }
 
-        WriteBackExecute(decodedInstr, ExReg, cpu, memReg);
+        printInstrStages(cycle, cpu, PipelineRegisters);
 
-        printInstrStages(cycle, cpu, intsr);
+        *PipelineRegisters[IF_ID_Current] = *PipelineRegisters[IF_ID_Next];
+        *PipelineRegisters[ID_EX_Current] = *PipelineRegisters[ID_EX_Next];
+        *PipelineRegisters[EX_MEM_Current] = *PipelineRegisters[EX_MEM_Next];
+        *PipelineRegisters[MEM_WB_Current] = *PipelineRegisters[MEM_WB_Next];
 
         cycle += 1;
     }
 
-    freeExRegister(ExReg);
-    MemRegFree(memReg);
+    FreePipelineReg(PipelineRegisters);
     return;
 }
 
-uint32_t FetchStage(uint32_t *Mem, CPU *cpu)
-{
-    return FetchInstruction(Mem, cpu);
-}
-
-Instruction *DecodeStage(uint32_t Instr)
-{
-    return DecodeInstruction(Instr);
-}
-
-void ExecuteStage(Instruction *instr, CPU *cpu, Execute_Register *reg)
-{
-    ExecuteInstr(instr, cpu, reg);
-}
-
-void MemStageExecute(Instruction *instr, Execute_Register *reg, uint32_t *mem, CPU *cpu, Memory_Register *MemReg)
-{
-    MemStage(instr, reg, mem, cpu, MemReg);
-}
-
-void WriteBackExecute(Instruction *instr, Execute_Register *reg, CPU *cpu, Memory_Register *memReg)
-{
-    WriteBack(instr, reg, cpu, memReg);
-}
-
-void printInstrStages(int Cycle, CPU *cpu, uint32_t instr)
+void printInstrStages(int Cycle, CPU *cpu, Pipeline_Reg **Registers)
 {
     printf("====================================================\n"
            "\n");
     printf("Cycle: %d\n", Cycle);
-    printf("PC: 0x%08x\n", cpu->pc);
-    printf("Current Instr: 0x%08x\n"
-           "\n",
-           instr);
+    printf("PC: 0x%08x\n\n", cpu->pc);
+    printf("Instr in Pipeline Per Stage\n");
+    printf("Fetch: 0x%08x\n", Registers[IF_ID_Current]->RawInstr);
+    if (Registers[ID_EX_Current]->RawInstr != 0)
+        printf("Decode: 0x%08x\n", Registers[ID_EX_Current]->RawInstr);
+    if (Registers[EX_MEM_Current]->RawInstr != 0)
+        printf("Execute: 0x%08x\n", Registers[EX_MEM_Current]->RawInstr);
+    if (Registers[MEM_WB_Current]->RawInstr != 0)
+        printf("Memory/Writeback: 0x%08x\n", Registers[MEM_WB_Current]->RawInstr);
+    printf("\n");
     printf("Registers\n----------------------------------------------------\n");
     printf("R1: %d R2: %d R3: %d R4: %d R5: %d\nR6: %d R7: %d R8: %d R9: %d R10: %d\n\n",
            cpu->reg[1], cpu->reg[2], cpu->reg[3], cpu->reg[4], cpu->reg[5], cpu->reg[6],
@@ -72,4 +71,25 @@ void printInstrStages(int Cycle, CPU *cpu, uint32_t instr)
 
     printf("====================================================\n"
            "\n");
+}
+
+Pipeline_Reg **InitalizePipelineReg()
+{
+    Pipeline_Reg **Arr = (Pipeline_Reg **)malloc(8 * sizeof(Pipeline_Reg *));
+    for (int i = 0; i < 8; ++i)
+    {
+        Arr[i] = (Pipeline_Reg *)malloc(sizeof(Pipeline_Reg));
+        memset(Arr[i], 0, sizeof(Pipeline_Reg));
+    }
+    return Arr;
+}
+
+void FreePipelineReg(Pipeline_Reg **Arr)
+{
+    for (int i = 0; i < 8; ++i)
+    {
+        free(Arr[i]);
+        Arr[i] = NULL;
+    }
+    free(Arr);
 }

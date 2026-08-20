@@ -1,38 +1,40 @@
 #include "Execute.h"
 
-void ExecuteInstr(Instruction *instr, CPU *cpu, Execute_Register *reg)
+void ExecuteInstr(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next)
 {
-    reg->value = 0;
+    ID_EX_Next->instr = ID_EX_Current->instr;
+    ID_EX_Next->RawInstr = ID_EX_Current->RawInstr;
+    ID_EX_Current->val = 0;
 
-    if (instr->Type == 'R')
+    if (ID_EX_Current->instr->Type == 'R')
     {
-        isRType(instr, cpu, reg);
+        isRType(cpu, ID_EX_Current, ID_EX_Next);
         return;
     }
-    else if (instr->Type == 'I')
+    else if (ID_EX_Current->instr->Type == 'I')
     {
-        isIType(instr, cpu, reg);
+        isIType(cpu, ID_EX_Current, ID_EX_Next);
         return;
     }
-    else if (instr->Type == 'S')
+    else if (ID_EX_Current->instr->Type == 'S')
     {
-        isSType(instr, cpu, reg);
+        isSType(cpu, ID_EX_Current, ID_EX_Next);
         return;
     }
-    else if (instr->Type == 'P')
+    else if (ID_EX_Current->instr->Type == 'P')
     {
-        isPType(instr, cpu);
+        isPType(cpu, ID_EX_Current);
         return;
     }
-    else if (instr->Type == 'B')
+    else if (ID_EX_Current->instr->Type == 'B')
     {
-        isBType(instr, cpu);
+        isBType(cpu, ID_EX_Current);
         return;
     }
-    else if (instr->Type == 'J')
+    else if (ID_EX_Current->instr->Type == 'J')
     {
 
-        isJType(instr, cpu, reg);
+        isJType(cpu, ID_EX_Current, ID_EX_Next);
         return;
     }
     else
@@ -42,62 +44,62 @@ void ExecuteInstr(Instruction *instr, CPU *cpu, Execute_Register *reg)
     }
 }
 
-void isRType(Instruction *instr, CPU *cpu, Execute_Register *reg)
+void isRType(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next)
 {
-    switch (instr->Opcode)
+    switch (ID_EX_Current->instr->Opcode)
     {
     case 0x01:
 
-        reg->value = cpu->reg[instr->rs1] + cpu->reg[instr->rs2];
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + cpu->reg[ID_EX_Current->instr->rs2];
         break;
 
     case 0x02:
 
-        reg->value = cpu->reg[instr->rs1] - cpu->reg[instr->rs2];
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] - cpu->reg[ID_EX_Current->instr->rs2];
         break;
 
     case 0x03:
 
-        reg->value = cpu->reg[instr->rs1] & cpu->reg[instr->rs2];
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] & cpu->reg[ID_EX_Current->instr->rs2];
         break;
 
     case 0x04:
 
-        reg->value = cpu->reg[instr->rs1] | cpu->reg[instr->rs2];
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] | cpu->reg[ID_EX_Current->instr->rs2];
         break;
 
     case 0x05:
 
-        reg->value = cpu->reg[instr->rs1] ^ cpu->reg[instr->rs2];
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] ^ cpu->reg[ID_EX_Current->instr->rs2];
         break;
 
     case 0x06:
 
-        reg->value = cpu->reg[instr->rs1] << (cpu->reg[instr->rs2] & 31);
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] << (cpu->reg[ID_EX_Current->instr->rs2] & 31);
         break;
 
     case 0x07:
 
-        reg->value = cpu->reg[instr->rs1] >> (cpu->reg[instr->rs2] & 31);
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] >> (cpu->reg[ID_EX_Current->instr->rs2] & 31);
         break;
 
     case 0x08:
 
-        reg->value = (int32_t)cpu->reg[instr->rs1] >> (cpu->reg[instr->rs2] & 31);
+        ID_EX_Next->val = (int32_t)cpu->reg[ID_EX_Current->instr->rs1] >> (cpu->reg[ID_EX_Current->instr->rs2] & 31);
         break;
 
     case 0x09:
     {
-        int16_t result = (int64_t)(int32_t)cpu->reg[instr->rs1] * (int64_t)(int32_t)cpu->reg[instr->rs2];
-        reg->value = (uint32_t)result;
+        int16_t result = (int64_t)(int32_t)cpu->reg[ID_EX_Current->instr->rs2] * (int64_t)(int32_t)cpu->reg[ID_EX_Current->instr->rs2];
+        ID_EX_Next->val = (uint32_t)result;
         break;
     }
 
     case 0x0A:
 
-        if (cpu->reg[instr->rs2] != 0)
+        if (cpu->reg[ID_EX_Current->instr->rs2] != 0)
         {
-            reg->value = (uint32_t)((int32_t)cpu->reg[instr->rs1] / (int32_t)cpu->reg[instr->rs2]);
+            ID_EX_Next->val = (uint32_t)((int32_t)cpu->reg[ID_EX_Current->instr->rs1] / (int32_t)cpu->reg[ID_EX_Current->instr->rs2]);
             break;
         }
         else
@@ -109,9 +111,9 @@ void isRType(Instruction *instr, CPU *cpu, Execute_Register *reg)
 
     case 0x0B:
 
-        if (cpu->reg[instr->rs2] != 0)
+        if (cpu->reg[ID_EX_Current->instr->rs2] != 0)
         {
-            reg->value = (uint32_t)((int32_t)cpu->reg[instr->rs1] % (int32_t)cpu->reg[instr->rs2]);
+            ID_EX_Next->val = (uint32_t)((int32_t)cpu->reg[ID_EX_Current->instr->rs2] % (int32_t)cpu->reg[ID_EX_Current->instr->rs2]);
             break;
         }
         else
@@ -126,17 +128,17 @@ void isRType(Instruction *instr, CPU *cpu, Execute_Register *reg)
 
     case 0x0D:
 
-        reg->value = cpu->reg[instr->rs1];
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1];
         break;
 
     case 0x0E:
 
-        reg->value = ~(cpu->reg[instr->rs1]);
+        ID_EX_Next->val = ~(cpu->reg[ID_EX_Current->instr->rs1]);
         break;
 
     case 0x0F:
 
-        reg->value = 0 - (cpu->reg[instr->rs1]);
+        ID_EX_Next->val = 0 - (cpu->reg[ID_EX_Current->instr->rs1]);
         break;
 
     default:
@@ -144,79 +146,78 @@ void isRType(Instruction *instr, CPU *cpu, Execute_Register *reg)
     }
 }
 
-void isIType(Instruction *instr, CPU *cpu, Execute_Register *reg)
+void isIType(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next)
 {
 
-    switch (instr->Opcode)
+    switch (ID_EX_Current->instr->Opcode)
     {
     case 0x10:
-
-        reg->value = cpu->reg[instr->rs1] + instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm;
         break;
 
     case 0x11:
 
-        reg->value = cpu->reg[instr->rs1] - instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] - ID_EX_Current->instr->imm;
         break;
 
     case 0x12:
 
-        reg->value = cpu->reg[instr->rs1] & instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] & ID_EX_Current->instr->imm;
         break;
 
     case 0x13:
 
-        reg->value = cpu->reg[instr->rs1] | instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] | ID_EX_Current->instr->imm;
         break;
 
     case 0x14:
 
-        reg->value = cpu->reg[instr->rs1] ^ instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] ^ ID_EX_Current->instr->imm;
         break;
 
     case 0x15:
 
-        reg->value = cpu->reg[instr->rs1] << (instr->imm & 31);
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] << (ID_EX_Current->instr->imm & 31);
         break;
 
     case 0x16:
 
-        reg->value = cpu->reg[instr->rs1] >> (instr->imm & 31);
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] >> (ID_EX_Current->instr->imm & 31);
         break;
 
     case 0x17:
 
-        reg->value = (int32_t)cpu->reg[instr->rs1] >> (instr->imm & 31);
+        ID_EX_Next->val = (int32_t)cpu->reg[ID_EX_Current->instr->rs1] >> (ID_EX_Current->instr->imm & 31);
         break;
 
     case 0x19:
 
-        reg->value = instr->imm;
+        ID_EX_Next->val = ID_EX_Current->instr->imm;
         break;
 
     case 0x1A:
 
-        reg->value = cpu->reg[instr->rs1] + instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm;
         break;
 
     case 0x1B:
 
-        reg->value = cpu->reg[instr->rs1] + instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm;
         break;
 
     case 0x1C:
 
-        reg->value = cpu->reg[instr->rs1] + instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm;
         break;
 
     case 0x1D:
 
-        reg->value = cpu->reg[instr->rs1] + instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm;
         break;
 
     case 0x1E:
 
-        reg->value = cpu->reg[instr->rs1] + instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm;
         break;
 
     default:
@@ -224,24 +225,24 @@ void isIType(Instruction *instr, CPU *cpu, Execute_Register *reg)
     }
 }
 
-void isSType(Instruction *instr, CPU *cpu, Execute_Register *reg)
+void isSType(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next)
 {
-    switch (instr->Opcode)
+    switch (ID_EX_Current->instr->Opcode)
     {
 
     case 0x1F:
 
-        reg->value = cpu->reg[instr->rs1] + instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm;
         break;
 
     case 0x20:
 
-        reg->value = cpu->reg[instr->rs1] + instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm;
         break;
 
     case 0x21:
 
-        reg->value = cpu->reg[instr->rs1] + instr->imm;
+        ID_EX_Next->val = cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm;
         break;
 
     default:
@@ -249,82 +250,82 @@ void isSType(Instruction *instr, CPU *cpu, Execute_Register *reg)
     }
 }
 
-void isBType(Instruction *instr, CPU *cpu)
+void isBType(CPU *cpu, Pipeline_Reg *ID_EX_Current)
 {
-    if (instr->Opcode == 0x22)
+    if (ID_EX_Current->instr->Opcode == 0x22)
     {
-        if (cpu->reg[instr->rs1] == cpu->reg[instr->rs2])
+        if (cpu->reg[ID_EX_Current->instr->rs1] == cpu->reg[ID_EX_Current->instr->rs2])
         {
-            cpu->pc += instr->imm;
+            cpu->pc += ID_EX_Current->instr->imm;
         }
     }
-    if (instr->Opcode == 0x23)
+    if (ID_EX_Current->instr->Opcode == 0x23)
     {
-        if (cpu->reg[instr->rs1] != cpu->reg[instr->rs2])
+        if (cpu->reg[ID_EX_Current->instr->rs1] != cpu->reg[ID_EX_Current->instr->rs2])
         {
-            cpu->pc += instr->imm;
+            cpu->pc += ID_EX_Current->instr->imm;
         }
     }
-    if (instr->Opcode == 0x24)
+    if (ID_EX_Current->instr->Opcode == 0x24)
     {
-        if ((int32_t)cpu->reg[instr->rs1] <= (int32_t)cpu->reg[instr->rs2])
+        if ((int32_t)cpu->reg[ID_EX_Current->instr->rs1] <= (int32_t)cpu->reg[ID_EX_Current->instr->rs2])
         {
-            cpu->pc += instr->imm;
+            cpu->pc += ID_EX_Current->instr->imm;
         }
     }
-    if (instr->Opcode == 0x25)
+    if (ID_EX_Current->instr->Opcode == 0x25)
     {
-        if ((int32_t)cpu->reg[instr->rs1] >= (int32_t)cpu->reg[instr->rs2])
+        if ((int32_t)cpu->reg[ID_EX_Current->instr->rs1] >= (int32_t)cpu->reg[ID_EX_Current->instr->rs2])
         {
-            cpu->pc += instr->imm;
+            cpu->pc += ID_EX_Current->instr->imm;
         }
     }
-    if (instr->Opcode == 0x26)
+    if (ID_EX_Current->instr->Opcode == 0x26)
     {
-        if (cpu->reg[instr->rs1] <= cpu->reg[instr->rs2])
+        if (cpu->reg[ID_EX_Current->instr->rs1] <= cpu->reg[ID_EX_Current->instr->rs2])
         {
-            cpu->pc += instr->imm;
+            cpu->pc += ID_EX_Current->instr->imm;
         }
     }
-    if (instr->Opcode == 0x27)
+    if (ID_EX_Current->instr->Opcode == 0x27)
     {
-        if (cpu->reg[instr->rs1] >= cpu->reg[instr->rs2])
+        if (cpu->reg[ID_EX_Current->instr->rs1] >= cpu->reg[ID_EX_Current->instr->rs2])
         {
-            cpu->pc += instr->imm;
+            cpu->pc += ID_EX_Current->instr->imm;
         }
     }
 }
 
-void isJType(Instruction *instr, CPU *cpu, Execute_Register *reg)
+void isJType(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next)
 {
-    if (instr->Opcode == 0x28)
+    if (ID_EX_Current->instr->Opcode == 0x28)
     {
-        cpu->pc += instr->imm;
+        cpu->pc += ID_EX_Current->instr->imm;
     }
-    else if (instr->Opcode == 0x29)
+    else if (ID_EX_Current->instr->Opcode == 0x29)
     {
 
-        reg->value = cpu->pc;
-        cpu->pc += instr->imm;
+        ID_EX_Next->val = cpu->pc;
+        cpu->pc += ID_EX_Current->instr->imm;
     }
-    else if (instr->Opcode == 0x2A)
+    else if (ID_EX_Current->instr->Opcode == 0x2A)
     {
-        reg->value = cpu->pc;
-        cpu->pc = (cpu->reg[instr->rs1] + instr->imm) & ~1;
+        ID_EX_Next->val = cpu->pc;
+        cpu->pc = (cpu->reg[ID_EX_Current->instr->rs1] + ID_EX_Current->instr->imm) & ~1;
     }
 }
 
-void isPType(Instruction *instr, CPU *cpu)
+void isPType(CPU *cpu, Pipeline_Reg *ID_EX_Current)
 {
-    if (instr->Opcode == 0x32)
+    if (ID_EX_Current->instr->Opcode == 0x32)
     {
         cpu->halted = 1;
         return;
     }
 }
 
-void freeExRegister(Execute_Register *reg)
-{
-    free(reg);
-    return;
-}
+// void freeExRegister(Execute_Register *reg)
+// {
+//     free(reg);
+//     return;
+// }

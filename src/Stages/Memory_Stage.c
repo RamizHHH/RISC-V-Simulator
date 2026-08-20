@@ -1,44 +1,52 @@
 #include "Memory_Stage.h"
 
-void MemStage(Instruction *instr, Execute_Register *reg, uint32_t *mem, CPU *cpu, Memory_Register *MemReg)
+void MemStage(Pipeline_Reg *EX_MEM_Current, Pipeline_Reg *MEM_WB_Next, uint32_t *mem, CPU *cpu)
 {
-    memset(MemReg, 0, sizeof(Memory_Register));
+    *MEM_WB_Next = *EX_MEM_Current;
 
-    if (instr->Type == 'S' || instr->Type == 'I')
+    if (EX_MEM_Current->instr->Type == 'S' || EX_MEM_Current->instr->Type == 'I')
     {
 
-        switch (instr->Opcode)
+        switch (EX_MEM_Current->instr->Opcode)
         {
         case 0x1A:
-            MemReg->unsigned_int = LD_Instr(reg, mem);
+            MEM_WB_Next->unsigned_int = LD_Instr(EX_MEM_Current, mem);
+            // MEM_WB_Next->val = MEM_WB_Next->unsigned_int;
             break;
 
         case 0x1B:
-            MemReg->signed_half = LDH_Instr(reg, mem);
+            MEM_WB_Next->signed_half = LDH_Instr(EX_MEM_Current, mem);
+            // MEM_WB_Next->val = (uint32_t)MEM_WB_Next->signed_half;
             break;
 
         case 0x1C:
-            MemReg->signed_byte = LDB_Instr(reg, mem);
+            MEM_WB_Next->signed_byte = LDB_Instr(EX_MEM_Current, mem);
+            // MEM_WB_Next->val = (uint32_t)MEM_WB_Next->signed_byte;
             break;
 
         case 0x1D:
-            MemReg->unsigned_half = LDUH_Instr(reg, mem);
+            MEM_WB_Next->unsigned_half = LDUH_Instr(EX_MEM_Current, mem);
+            // MEM_WB_Next->val = (uint32_t)MEM_WB_Next->unsigned_half;
             break;
 
         case 0x1E:
-            MemReg->unsigned_byte = LDUB_Instr(reg, mem);
+            MEM_WB_Next->unsigned_byte = LDUB_Instr(EX_MEM_Current, mem);
+            // MEM_WB_Next->val = (uint32_t)MEM_WB_Next->unsigned_byte;
             break;
 
         case 0x1F:
-            ST_Instr(reg, instr, mem, cpu);
+            ST_Instr(EX_MEM_Current, mem, cpu);
+            MEM_WB_Next->instr = NULL;
             break;
 
         case 0x20:
-            STH_Instr(reg, instr, mem, cpu);
+            STH_Instr(EX_MEM_Current, mem, cpu);
+            MEM_WB_Next->instr = NULL;
             break;
 
         case 0x21:
-            STB_Instr(reg, instr, mem, cpu);
+            STB_Instr(EX_MEM_Current, mem, cpu);
+            MEM_WB_Next->instr = NULL;
             break;
 
         default:
@@ -51,52 +59,52 @@ void MemStage(Instruction *instr, Execute_Register *reg, uint32_t *mem, CPU *cpu
     }
 }
 
-uint32_t LD_Instr(Execute_Register *reg, uint32_t *mem)
+uint32_t LD_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem)
 {
 
-    uint32_t v = readMemory(reg->value, mem);
+    uint32_t v = readMemory(EX_MEM_Current->val, mem);
     return v;
 }
 
-int16_t LDH_Instr(Execute_Register *reg, uint32_t *mem)
+int16_t LDH_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem)
 {
-    return (int16_t)(readMemory(reg->value, mem));
+    return (int16_t)(readMemory(EX_MEM_Current->val, mem));
 }
 
-int8_t LDB_Instr(Execute_Register *reg, uint32_t *mem)
+int8_t LDB_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem)
 {
-    return (int8_t)(readMemory(reg->value, mem));
+    return (int8_t)(readMemory(EX_MEM_Current->val, mem));
 }
 
-uint16_t LDUH_Instr(Execute_Register *reg, uint32_t *mem)
+uint16_t LDUH_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem)
 {
-    return (uint16_t)(readMemory(reg->value, mem));
+    return (uint16_t)(readMemory(EX_MEM_Current->val, mem));
 }
 
-uint8_t LDUB_Instr(Execute_Register *reg, uint32_t *mem)
+uint8_t LDUB_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem)
 {
-    return (uint8_t)(readMemory(reg->value, mem));
+    return (uint8_t)(readMemory(EX_MEM_Current->val, mem));
 }
 
-void ST_Instr(Execute_Register *reg, Instruction *instr, uint32_t *mem, CPU *cpu)
+void ST_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem, CPU *cpu)
 {
-    WriteMemory(reg->value, mem, cpu->reg[instr->rs2]);
+    WriteMemory(EX_MEM_Current->val, mem, cpu->reg[EX_MEM_Current->instr->rs2]);
     return;
 }
 
-void STH_Instr(Execute_Register *reg, Instruction *instr, uint32_t *mem, CPU *cpu)
+void STH_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem, CPU *cpu)
 {
-    WriteMemory(reg->value, mem, (uint16_t)cpu->reg[instr->rs2]);
+    WriteMemory(EX_MEM_Current->val, mem, (uint16_t)cpu->reg[EX_MEM_Current->instr->rs2]);
     return;
 }
 
-void STB_Instr(Execute_Register *reg, Instruction *instr, uint32_t *mem, CPU *cpu)
+void STB_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem, CPU *cpu)
 {
-    WriteMemory(reg->value, mem, (uint8_t)cpu->reg[instr->rs2]);
+    WriteMemory(EX_MEM_Current->val, mem, (uint8_t)cpu->reg[EX_MEM_Current->instr->rs2]);
     return;
 }
 
-void MemRegFree(Memory_Register *reg)
-{
-    free(reg);
-}
+// void MemRegFree(Memory_Register *reg)
+// {
+//     free(reg);
+// }

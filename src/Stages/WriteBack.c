@@ -1,41 +1,43 @@
 #include "WriteBack.h"
 
-void WriteBack(Instruction *instr, Execute_Register *reg, CPU *cpu, Memory_Register *memReg)
+void WriteBack(Pipeline_Reg *MEM_WB_Current, CPU *cpu)
 {
+    if (MEM_WB_Current == NULL || MEM_WB_Current->instr == NULL)
+    {
+        return;
+    }
 
-    switch (instr->Opcode)
+    switch (MEM_WB_Current->instr->Opcode)
     {
     case 0x1A:
-        cpu->reg[instr->rd] = memReg->unsigned_int;
+        cpu->reg[MEM_WB_Current->instr->rd] = MEM_WB_Current->unsigned_int;
         break;
 
     case 0x1B:
-        cpu->reg[instr->rd] = memReg->signed_half;
+        cpu->reg[MEM_WB_Current->instr->rd] = MEM_WB_Current->signed_half;
         break;
 
     case 0x1C:
-        cpu->reg[instr->rd] = memReg->signed_byte;
+        cpu->reg[MEM_WB_Current->instr->rd] = MEM_WB_Current->signed_byte;
         break;
 
     case 0x1D:
-        cpu->reg[instr->rd] = memReg->unsigned_half;
+        cpu->reg[MEM_WB_Current->instr->rd] = MEM_WB_Current->unsigned_half;
         break;
 
     case 0x1E:
-        cpu->reg[instr->rd] = memReg->unsigned_byte;
+        cpu->reg[MEM_WB_Current->instr->rd] = MEM_WB_Current->unsigned_byte;
         break;
     default:
-        if (cpu->halted != 1)
-        {
-            cpu->reg[instr->rd] = reg->value;
-            cpu->reg[0] = 0;
-        }
-        // else if (cpu->halted == 1)
-        // {
-        //     printf("CPU Halted!\n");
-        // }
-
+        cpu->reg[MEM_WB_Current->instr->rd] = MEM_WB_Current->val;
         break;
     }
-    FreeInstr(instr);
+
+    cpu->reg[0] = 0;
+    FreeInstr(MEM_WB_Current->instr);
+}
+
+void FreeInstr(Instruction *instr)
+{
+    free(instr);
 }

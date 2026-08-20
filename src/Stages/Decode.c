@@ -1,12 +1,11 @@
 #include "Decode.h"
 
-Instruction *DecodeInstruction(uint32_t RawInstr)
+Instruction *DecodeInstruction(uint32_t RawInstr, Pipeline_Reg *ID_EX_Next)
 {
     Instruction *instr = malloc(sizeof(Instruction));
 
-    instr->OgInstr = RawInstr;
-
     DecodeOpcode(RawInstr, instr);
+    ID_EX_Next->RawInstr = RawInstr;
 
     return instr;
 }
@@ -131,9 +130,4 @@ void checkType(Instruction *instr)
     {
         instr->Type = 'P';
     }
-}
-
-void FreeInstr(Instruction *instr)
-{
-    free(instr);
 }

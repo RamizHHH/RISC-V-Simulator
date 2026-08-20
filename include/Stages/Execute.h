@@ -15,20 +15,20 @@ typedef struct
 
 } Execute_Register;
 
-void ExecuteInstr(Instruction *instr, CPU *cpu, Execute_Register *reg);
+void ExecuteInstr(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next);
 
-void isRType(Instruction *instr, CPU *cpu, Execute_Register *reg);
+void isRType(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next);
 
-void isIType(Instruction *instr, CPU *cpu, Execute_Register *reg);
+void isIType(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next);
 
-void isSType(Instruction *instr, CPU *cpu, Execute_Register *reg);
+void isSType(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next);
 
-void isBType(Instruction *instr, CPU *cpu);
+void isBType(CPU *cpu, Pipeline_Reg *ID_EX_Current);
 
-void isJType(Instruction *instr, CPU *cpu, Execute_Register *reg);
+void isJType(CPU *cpu, Pipeline_Reg *ID_EX_Current, Pipeline_Reg *ID_EX_Next);
 
-void isPType(Instruction *instr, CPU *cpu);
+void isPType(CPU *cpu, Pipeline_Reg *ID_EX_Current);
 
-void freeExRegister(Execute_Register *reg);
+// void freeExRegister(Execute_Register *reg);
 
 #endif

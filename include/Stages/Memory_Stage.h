@@ -18,24 +18,24 @@ typedef struct
 
 } Memory_Register;
 
-void MemStage(Instruction *instr, Execute_Register *reg, uint32_t *mem, CPU *cpu, Memory_Register *MemReg);
+void MemStage(Pipeline_Reg *EX_MEM_Current, Pipeline_Reg *MEM_WB_Next, uint32_t *mem, CPU *cpu);
 
-uint32_t LD_Instr(Execute_Register *reg, uint32_t *mem);
+uint32_t LD_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem);
 
-int16_t LDH_Instr(Execute_Register *reg, uint32_t *mem);
+int16_t LDH_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem);
 
-int8_t LDB_Instr(Execute_Register *reg, uint32_t *mem);
+int8_t LDB_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem);
 
-uint16_t LDUH_Instr(Execute_Register *reg, uint32_t *mem);
+uint16_t LDUH_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem);
 
-uint8_t LDUB_Instr(Execute_Register *reg, uint32_t *mem);
+uint8_t LDUB_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem);
 
-void ST_Instr(Execute_Register *reg, Instruction *instr, uint32_t *mem, CPU *cpu);
+void ST_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem, CPU *cpu);
 
-void STH_Instr(Execute_Register *reg, Instruction *instr, uint32_t *mem, CPU *cpu);
+void STH_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem, CPU *cpu);
 
-void STB_Instr(Execute_Register *reg, Instruction *instr, uint32_t *mem, CPU *cpu);
+void STB_Instr(Pipeline_Reg *EX_MEM_Current, uint32_t *mem, CPU *cpu);
 
-void MemRegFree(Memory_Register *reg);
+// void MemRegFree(Memory_Register *reg);
 
 #endif

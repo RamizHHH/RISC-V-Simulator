@@ -1,8 +1,8 @@
-Issac-32 Custom Instruction Set Architecture (ISA)
+Rex-32 Custom Instruction Set Architecture (ISA)
 
 1. Overview
 
-Issac-32 is a simple 32-bit load/store instruction set architecture inspired by RISC-V.
+Rex-32 is a simple 32-bit load/store instruction set architecture inspired by RISC-V.
 
 Core goals:
 - Fixed 32-bit instruction width
